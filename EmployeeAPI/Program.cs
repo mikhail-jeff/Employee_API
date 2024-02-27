@@ -1,5 +1,3 @@
-using EmployeeAPI.Logging;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -13,8 +11,7 @@ builder.Services.AddControllers(option =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// add custom logging
-builder.Services.AddSingleton<ILogging, Logging>();
+
 
 var app = builder.Build();
 

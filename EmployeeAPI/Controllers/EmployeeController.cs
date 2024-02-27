@@ -13,12 +13,9 @@ namespace EmployeeAPI.Controllers
     public class EmployeeController : ControllerBase
     {
 
-        // dependency injection
-        private readonly ILogging _logger;
-
-        public EmployeeController(ILogging logger)
+        public EmployeeController()
         {
-            _logger = logger;
+
         }
 
 
