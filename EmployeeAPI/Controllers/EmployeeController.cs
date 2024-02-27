@@ -1,5 +1,4 @@
 ﻿using EmployeeAPI.Data;
-using EmployeeAPI.Logging;
 using EmployeeAPI.Models;
 using EmployeeAPI.Models.Dto;
 using Microsoft.AspNetCore.JsonPatch;
@@ -24,7 +23,6 @@ namespace EmployeeAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<EmployeeDTO>> GetEmployees()
         {
-            _logger.Log("Getting All Employees", "");
             return Ok(EmployeeStore.employeeList);
         }
 
@@ -38,7 +36,7 @@ namespace EmployeeAPI.Controllers
 
             if (id == 0)
             {
-                _logger.Log($"Get employee error with an id: {id}", "error");
+
                 return BadRequest();
             }
 
