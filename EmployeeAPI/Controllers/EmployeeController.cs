@@ -11,12 +11,22 @@ namespace EmployeeAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
+
+        // dependency injection
+        private readonly ILogger<EmployeeController> _logger;
+
+        public EmployeeController(ILogger<EmployeeController> logger)
+        {
+            _logger = logger;
+        }
+
+
         // GET ALL EMPLOYEES
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<EmployeeDTO>> GetEmployees()
         {
-
+            _logger.LogInformation("Getting All Employees");
             return Ok(EmployeeStore.employeeList);
         }
 
@@ -30,6 +40,7 @@ namespace EmployeeAPI.Controllers
 
             if (id == 0)
             {
+                _logger.LogError($"Get employee error with an id: {id}");
                 return BadRequest();
             }
 
