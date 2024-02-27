@@ -1,6 +1,7 @@
 ﻿using EmployeeAPI.Data;
 using EmployeeAPI.Models;
 using EmployeeAPI.Models.Dto;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeAPI.Controllers
@@ -95,6 +96,56 @@ namespace EmployeeAPI.Controllers
             }
 
             EmployeeStore.employeeList.Remove(employee);
+
+            return NoContent();
+        }
+
+        // UPDATE EMPLOYEE
+        [HttpPut("{id:int}", Name = "UpdateEmployee")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdateEmployee(int id, [FromBody] EmployeeDTO employeeDTO)
+        {
+            if (employeeDTO == null || id != employeeDTO.Id)
+            {
+                return BadRequest();
+            }
+
+            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+
+            employee.Name = employeeDTO.Name;
+            employee.Age = employeeDTO.Age;
+            employee.Job = employeeDTO.Job;
+            employee.Country = employeeDTO.Country;
+
+            return NoContent();
+        }
+
+
+        // UPDATE EMPLOYEE
+        [HttpPatch("{id:int}", Name = "UpdatePartialEmployee")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult UpdatePartialEmployee(int id, JsonPatchDocument<EmployeeDTO> patchDTO)
+        {
+            if (patchDTO == null || id == 0)
+            {
+                return BadRequest();
+            }
+
+            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            patchDTO.ApplyTo(employee, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             return NoContent();
         }
