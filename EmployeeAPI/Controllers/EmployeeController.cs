@@ -1,4 +1,5 @@
 ﻿using EmployeeAPI.Data;
+using EmployeeAPI.Logging;
 using EmployeeAPI.Models;
 using EmployeeAPI.Models.Dto;
 using Microsoft.AspNetCore.JsonPatch;
@@ -13,9 +14,9 @@ namespace EmployeeAPI.Controllers
     {
 
         // dependency injection
-        private readonly ILogger<EmployeeController> _logger;
+        private readonly ILogging _logger;
 
-        public EmployeeController(ILogger<EmployeeController> logger)
+        public EmployeeController(ILogging logger)
         {
             _logger = logger;
         }
@@ -26,7 +27,7 @@ namespace EmployeeAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<EmployeeDTO>> GetEmployees()
         {
-            _logger.LogInformation("Getting All Employees");
+            _logger.Log("Getting All Employees", "");
             return Ok(EmployeeStore.employeeList);
         }
 
@@ -40,7 +41,7 @@ namespace EmployeeAPI.Controllers
 
             if (id == 0)
             {
-                _logger.LogError($"Get employee error with an id: {id}");
+                _logger.Log($"Get employee error with an id: {id}", "error");
                 return BadRequest();
             }
 
