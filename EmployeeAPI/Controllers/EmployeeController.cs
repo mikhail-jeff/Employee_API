@@ -11,10 +11,11 @@ namespace EmployeeAPI.Controllers
     [ApiController]
     public class EmployeeController : ControllerBase
     {
+        private readonly ApplicationDbContext _db;
 
-        public EmployeeController()
+        public EmployeeController(ApplicationDbContext db)
         {
-
+            _db = db;
         }
 
 
@@ -23,7 +24,7 @@ namespace EmployeeAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<EmployeeDTO>> GetEmployees()
         {
-            return Ok(EmployeeStore.employeeList);
+            return Ok(_db.Employees);
         }
 
         // GET A SINGLE EMPLOYEE
@@ -40,7 +41,7 @@ namespace EmployeeAPI.Controllers
                 return BadRequest();
             }
 
-            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+            var employee = _db.Employees.FirstOrDefault(e => e.Id == id);
 
             if (employee == null)
             {
@@ -58,7 +59,7 @@ namespace EmployeeAPI.Controllers
         public ActionResult<EmployeeDTO> CreateEmployee([FromBody] EmployeeDTO employeeDTO)
         {
             // Custom Validation
-            if (EmployeeStore.employeeList.FirstOrDefault(e => e.Name.ToLower() == employeeDTO.Name.ToLower()) != null)
+            if (_db.Employees.FirstOrDefault(e => e.Name.ToLower() == employeeDTO.Name.ToLower()) != null)
             {
                 ModelState.AddModelError("CustomError", "Employee already exists!");
 
@@ -75,9 +76,16 @@ namespace EmployeeAPI.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            employeeDTO.Id = EmployeeStore.employeeList.OrderByDescending(e => e.Id).FirstOrDefault().Id + 1;
+            Employee model = new()
+            {
+                Name = employeeDTO.Name,
+                Job = employeeDTO.Job,
+                Country = employeeDTO.Country,
+                CreatedDate = DateTime.Now
+            };
 
-            EmployeeStore.employeeList.Add(employeeDTO);
+            _db.Employees.Add(model);
+            _db.SaveChanges();
 
             return CreatedAtRoute("GetEmployee", new { id = employeeDTO.Id }, employeeDTO);
         }
@@ -95,14 +103,15 @@ namespace EmployeeAPI.Controllers
                 return BadRequest();
             }
 
-            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+            var employee = _db.Employees.FirstOrDefault(e => e.Id == id);
 
             if (employee == null)
             {
                 return NotFound();
             }
 
-            EmployeeStore.employeeList.Remove(employee);
+            _db.Employees.Remove(employee);
+            _db.SaveChanges();
 
             return NoContent();
         }
@@ -111,25 +120,51 @@ namespace EmployeeAPI.Controllers
         [HttpPut("{id:int}", Name = "UpdateEmployee")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult UpdateEmployee(int id, [FromBody] EmployeeDTO employeeDTO)
         {
-            if (employeeDTO == null || id != employeeDTO.Id)
+            if (employeeDTO == null)
             {
-                return BadRequest();
+                return BadRequest("Employee data is missing.");
             }
 
-            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+            if (id != employeeDTO.Id)
+            {
+                // Log the mismatched IDs for debugging
+                Console.WriteLine($"URL ID: {id}, DTO ID: {employeeDTO.Id}");
 
-            employee.Name = employeeDTO.Name;
-            employee.Age = employeeDTO.Age;
-            employee.Job = employeeDTO.Job;
-            employee.Country = employeeDTO.Country;
+                // Fix the ID mismatch error
+                employeeDTO.Id = id;
 
-            return NoContent();
+            }
+
+            var existingEmployee = _db.Employees.FirstOrDefault(e => e.Id == id);
+
+            if (existingEmployee == null)
+            {
+                return NotFound("Employee not found.");
+            }
+
+            try
+            {
+                existingEmployee.Name = employeeDTO.Name;
+                existingEmployee.Job = employeeDTO.Job;
+                existingEmployee.Country = employeeDTO.Country;
+
+                _db.SaveChanges();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error updating employee: {ex.Message}");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the employee.");
+            }
         }
 
 
-        // UPDATE EMPLOYEE
+        // PARTIAL UPDATE EMPLOYEE
         [HttpPatch("{id:int}", Name = "UpdatePartialEmployee")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -140,22 +175,43 @@ namespace EmployeeAPI.Controllers
                 return BadRequest();
             }
 
-            var employee = EmployeeStore.employeeList.FirstOrDefault(e => e.Id == id);
+            var employee = _db.Employees.FirstOrDefault(e => e.Id == id);
 
             if (employee == null)
             {
                 return NotFound();
             }
 
-            patchDTO.ApplyTo(employee, ModelState);
+            // Store the existing CreatedDate
+            var createdDate = employee.CreatedDate;
+
+            EmployeeDTO employeeDTO = new EmployeeDTO()
+            {
+                Name = employee.Name,
+                Job = employee.Job,
+                Country = employee.Country,
+            };
+
+            patchDTO.ApplyTo(employeeDTO, ModelState);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
+            // Apply changes to the employee entity
+            employee.Name = employeeDTO.Name;
+            employee.Job = employeeDTO.Job;
+            employee.Country = employeeDTO.Country;
+
+            // Restore the CreatedDate
+            employee.CreatedDate = createdDate;
+
+            _db.SaveChanges();
+
             return NoContent();
         }
+
 
     }
 }

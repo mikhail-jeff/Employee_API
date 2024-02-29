@@ -4,6 +4,7 @@ using EmployeeAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmployeeAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240228151132_SeedEmployeeTable")]
+    partial class SeedEmployeeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,7 +57,6 @@ namespace EmployeeAPI.Migrations
                         {
                             Id = 1,
                             Country = "China",
-                            CreatedDate = new DateTime(2024, 2, 28, 23, 14, 31, 60, DateTimeKind.Local).AddTicks(9202),
                             Job = "Tiktokerist",
                             Name = "Zhiji Wang"
                         },
@@ -62,7 +64,6 @@ namespace EmployeeAPI.Migrations
                         {
                             Id = 2,
                             Country = "South Korea",
-                            CreatedDate = new DateTime(2024, 2, 28, 23, 14, 31, 60, DateTimeKind.Local).AddTicks(9224),
                             Job = "Dancerist",
                             Name = "Sandara Park"
                         },
@@ -70,7 +71,6 @@ namespace EmployeeAPI.Migrations
                         {
                             Id = 3,
                             Country = "Vietnam",
-                            CreatedDate = new DateTime(2024, 2, 28, 23, 14, 31, 60, DateTimeKind.Local).AddTicks(9227),
                             Job = "Dancerist",
                             Name = "Bert Nguyen"
                         });
